@@ -1,12 +1,10 @@
-package com.michalopiola
+package com.michalopiola.kafka
 
 
 import com.michalopiola.model.Person
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.util.StdDateFormat
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.javafaker.Faker
+import com.michalopiola.util.jsonMapper
+import com.michalopiola.util.personsTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord

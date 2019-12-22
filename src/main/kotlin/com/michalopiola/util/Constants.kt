@@ -1,4 +1,4 @@
-package com.michalopiola
+package com.michalopiola.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
