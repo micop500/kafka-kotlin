@@ -4,6 +4,7 @@ package com.michalopiola.kafka
 import com.michalopiola.model.Person
 import com.github.javafaker.Faker
 import com.michalopiola.util.jsonMapper
+import com.michalopiola.util.logger
 import com.michalopiola.util.personsTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
@@ -32,6 +33,7 @@ class MyProducer(brokers: String) {
         )
         val fakePersonJson = jsonMapper.writeValueAsString(fakePerson)
         val futureResult = producer.send(ProducerRecord(personsTopic, fakePersonJson))
+        logger.info("Record: $fakePerson has been produced to the topic")
         futureResult.get()
     }
 }
