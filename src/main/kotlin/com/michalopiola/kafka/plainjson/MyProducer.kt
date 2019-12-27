@@ -1,4 +1,4 @@
-package com.michalopiola.kafka
+package com.michalopiola.kafka.plainjson
 
 
 import com.michalopiola.model.Person

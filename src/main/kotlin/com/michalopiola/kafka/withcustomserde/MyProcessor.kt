@@ -1,4 +1,4 @@
-package com.michalopiola.kafka
+package com.michalopiola.kafka.withcustomserde
 
 import com.michalopiola.model.Person
 import com.michalopiola.util.agesTopic
@@ -23,13 +23,13 @@ class MyProcessor(brokers: String) {
     private val consumer = createConsumer(brokers)
     private val producer = createProducer(brokers)
 
-    private fun createConsumer(brokers: String): Consumer<String, String> {
+    private fun createConsumer(brokers: String): Consumer<String, Person> {
         val props = Properties()
         props["bootstrap.servers"] = brokers
         props["group.id"] = "person-processor"
         props["key.deserializer"] = StringDeserializer::class.java.canonicalName
-        props["value.deserializer"] = StringDeserializer::class.java.canonicalName
-        return KafkaConsumer<String, String>(props)
+        props["value.deserializer"] = PersonDeserializer::class.java.canonicalName
+        return KafkaConsumer(props)
     }
 
     private fun createProducer(brokers: String): Producer<String, String> {
@@ -45,8 +45,7 @@ class MyProcessor(brokers: String) {
         val records = consumer.poll(Duration.ofSeconds(1))
         logger.info("The number of consumed records: ${records.count()}")
         records.forEach {
-            val personJson = it.value()
-            val person = jsonMapper.readValue(personJson, Person::class.java)
+            val person = it.value()
             val birthLocalDate = person.birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
             val age = Period.between(birthLocalDate, LocalDate.now()).years
             val future = producer.send(ProducerRecord(agesTopic, "${person.firstName} ${person.lastName}", "$age"))
