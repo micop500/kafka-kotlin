@@ -25,14 +25,16 @@ class MyProducer(brokers: String) {
     }
 
     fun produce() {
-        val faker = Faker()
-        val fakePerson = Person(
-            faker.name().firstName(),
-            faker.name().lastName(),
-            faker.date().birthday()
-        )
-        val futureResult = producer.send(ProducerRecord(personsTopic, fakePerson))
-        logger.info("Record: $fakePerson has been produced to the topic")
-        futureResult.get()
+        while(true) {
+            val faker = Faker()
+            val fakePerson = Person(
+                faker.name().firstName(),
+                faker.name().lastName(),
+                faker.date().birthday()
+            )
+            val futureResult = producer.send(ProducerRecord(personsTopic, fakePerson))
+            logger.info("Record: $fakePerson has been produced to the topic")
+            futureResult.get()
+        }
     }
 }

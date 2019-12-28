@@ -42,15 +42,17 @@ class MyProcessor(brokers: String) {
 
     fun process() {
         consumer.subscribe(listOf(personsTopic))
-        val records = consumer.poll(Duration.ofSeconds(1))
-        logger.info("The number of consumed records: ${records.count()}")
-        records.forEach {
-            val personJson = it.value()
-            val person = jsonMapper.readValue(personJson, Person::class.java)
-            val birthLocalDate = person.birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-            val age = Period.between(birthLocalDate, LocalDate.now()).years
-            val future = producer.send(ProducerRecord(agesTopic, "${person.firstName} ${person.lastName}", "$age"))
-            future.get()
+        while (true) {
+            val records = consumer.poll(Duration.ofSeconds(1))
+            logger.info("The number of consumed records: ${records.count()}")
+            records.forEach {
+                val personJson = it.value()
+                val person = jsonMapper.readValue(personJson, Person::class.java)
+                val birthLocalDate = person.birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                val age = Period.between(birthLocalDate, LocalDate.now()).years
+                val future = producer.send(ProducerRecord(agesTopic, "${person.firstName} ${person.lastName}", "$age"))
+                future.get()
+            }
         }
     }
 }

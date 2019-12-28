@@ -1,10 +1,12 @@
-package com.michalopiola.kafka.withcustomserde
+package com.michalopiola.kafka.withavro
 
+import com.michalopiola.kafka.withcustomserde.PersonDeserializer
 import com.michalopiola.model.Person
 import com.michalopiola.util.agesTopic
-import com.michalopiola.util.jsonMapper
 import com.michalopiola.util.logger
 import com.michalopiola.util.personsTopic
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -18,17 +20,18 @@ import java.time.Period
 import java.time.ZoneId
 import java.util.*
 
-class MyProcessor(brokers: String) {
+class MyProcessor(brokers: String, schemaRegistryUrl: String) {
 
-    private val consumer = createConsumer(brokers)
+    private val consumer = createConsumer(brokers, schemaRegistryUrl)
     private val producer = createProducer(brokers)
 
-    private fun createConsumer(brokers: String): Consumer<String, Person> {
+    private fun createConsumer(brokers: String, schemaRegistryUrl: String): Consumer<String, GenericRecord> {
         val props = Properties()
         props["bootstrap.servers"] = brokers
         props["group.id"] = "person-processor"
         props["key.deserializer"] = StringDeserializer::class.java.canonicalName
-        props["value.deserializer"] = PersonDeserializer::class.java.canonicalName
+        props["value.deserializer"] = KafkaAvroDeserializer::class.java.canonicalName
+        props["schema.registry.url"] = schemaRegistryUrl
         return KafkaConsumer(props)
     }
 
@@ -46,7 +49,12 @@ class MyProcessor(brokers: String) {
             val records = consumer.poll(Duration.ofSeconds(1))
             logger.info("The number of consumed records: ${records.count()}")
             records.forEach {
-                val person = it.value()
+                val avroPerson = it.value()
+                val person = Person(
+                    avroPerson["firstName"].toString(),
+                    avroPerson["lastName"].toString(),
+                    Date(avroPerson["birthDate"] as Long)
+                )
                 val birthLocalDate = person.birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
                 val age = Period.between(birthLocalDate, LocalDate.now()).years
                 val future = producer.send(ProducerRecord(agesTopic, "${person.firstName} ${person.lastName}", "$age"))
